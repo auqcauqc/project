@@ -9,7 +9,7 @@
 ### Functions
 
 1. Given a text settings file, get/set the value of settings, add/delete settings
-2. Check the format of settings and find duplicated settings
+2. Check the format of settings and delete duplicated settings
 
 ### Data format
 
@@ -19,7 +19,7 @@ Each setting takes one line and has the following format:
 name=value
 ```
 
-`name` is all the characters before the first equal sign, `value` is all the characters after the first equal sign.
+`name` is all the characters before the first equal sign, `value` is all the characters after the first equal sign. `value` cannot be empty.
 
 `name` can contain characters a-z, A-Z, 0-9 and _
 
