@@ -13,7 +13,7 @@
 
 ### Data format
 
-Each setting takes one line and it has the following format:
+Each setting takes one line and has the following format:
 
 ```
 name=value
