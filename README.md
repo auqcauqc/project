@@ -9,7 +9,7 @@
 ### Functions
 
 1. Given a text settings file, get/set the value of settings, add/delete settings
-2. Check the format of settings and delete duplicated settings
+2. Check the format of settings and delete duplicates of settings
 
 ### Data format
 
