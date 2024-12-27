@@ -38,7 +38,22 @@ ScriptPath=main.py
 Using the script
 
 ```
+main.py settings.txt
 
+Type 'help' for a list of commands and their descriptions
+Type 'help' followed by the name of a command to get its usage
+> help
+help: Displays help
+list: Lists all settings
+fix: Check the format of settings and delete duplicated settings
+get: Gets the value of a setting
+set: Sets the value of a setting
+add: Adds a setting
+delete: Deletes a setting
+exit: Exists this script
+> help get
+Usage: get name
+  name: The name of the setting
 ```
 
 ### Checking input (level 2)
