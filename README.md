@@ -8,7 +8,7 @@
 
 ### Functions
 
-1. Get the values of settings from a settings file and add settings to a settings file
+1. Given a text settings file, get/set the value of settings, add/delete settings
 2. Check the format of settings and find duplicated settings
 
 ### Data format
