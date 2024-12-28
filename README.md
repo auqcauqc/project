@@ -90,6 +90,14 @@ ScriptPath: abc
 Invalid setting at line 2
 ScriptPath: abc
 NewSetting: xyz
+> fix
+Invalid setting at line 2
+Deleted duplicated setting ScriptPath
+> list
+ScriptPath: abc
+Invalid setting at line 2
+NewSetting: xyz
+> exit
 ```
 
 ### Checking input (level 2)
