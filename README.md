@@ -112,6 +112,4 @@ When reading or modifying settings, lines are read from the settings file with a
 
 Settings files and temporary settings files are opened with `with` statements, and will therefore be closed automatically.
 
-When quickly creating a new settings file, the file is created and closed immediately.
-
-Files are not entirely loaded into memory at once in case the file is large.
+Files are not never entirely loaded into memory in case the file is large.
