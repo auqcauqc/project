@@ -65,7 +65,31 @@ ScriptPath=main.py
 Using the script
 
 ```
+main.py settings.txt 
 
+Type 'help' for a list of commands and their descriptions
+Type 'help' followed by the name of a command to get its usage
+> help
+help: Displays help
+list: Lists all settings
+fix: Finds incorrectly formatted settings and deletes duplicated settings
+get: Gets the value of a setting
+set: Sets the value of a setting
+add: Adds a setting
+delete: Deletes a setting
+exit: Exists this script
+> help get
+Usage: get name
+  name: The name of the setting
+> get ScriptPath
+C:\Users\yue.ouyang\main.py
+> set ScriptPath abc
+> add NewSetting xyz
+> list
+ScriptPath: abc
+Invalid setting at line 2
+ScriptPath: abc
+NewSetting: xyz
 ```
 
 ### Checking input (level 2)
