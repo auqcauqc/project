@@ -19,23 +19,10 @@ Displays script usage
 main.py --help
 ```
 
-Opens settings file `file`, executes command `command` with arguments `args` and exit, or enter them interactively.
+Opens settings file `file`, use command `command` with arguments `args` to execute the command and exit, or enter commands interactively.
 
 ```
 main.py file [command] [args]
-```
-
-Commands:
-
-```
-help: Displays help
-list: Lists all settings
-fix: Finds incorrectly formatted settings and deletes duplicated settings
-get: Gets the value of a setting
-set: Sets the value of a setting
-add: Adds a setting
-delete: Deletes a setting
-exit: Exists this script
 ```
 
 ### Data format
@@ -50,7 +37,7 @@ name=value
 
 `name` can contain characters a-z, A-Z, 0-9 and _
 
-`value` can contain any character other than newline, since each setting takes one line
+`value` can contain any UTF-8 character
 
 ### Test case
 
