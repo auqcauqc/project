@@ -61,17 +61,17 @@ class Setting:
 status: int = 0
 
 
-def set_status(value: int):
+def set_status(value: int) -> None:
     global status
     status = value
 
 
-def clear_status():
+def clear_status() -> None:
     global status
     status = 0
 
 
-def do_help(command=None):
+def do_help(command=None) -> None:
     """List all commands or show usage of a command.
 
     Args:
@@ -85,7 +85,7 @@ def do_help(command=None):
         print(f"{command}: {commands[command].desc}")
 
 
-def do_list():
+def do_list() -> None:
     clear_status()
 
     for line_number, line in enumerate(file, start=1):
@@ -100,7 +100,7 @@ def do_list():
         print(f"{name}: {value}")
 
 
-def do_fix():
+def do_fix() -> None:
     clear_status()
 
     good = True  # First assume the file has no problems
@@ -157,7 +157,7 @@ def do_fix():
     raise FileReplace(duplicated_names)
 
 
-def do_get(name):
+def do_get(name) -> None:
     clear_status()
 
     for line in file:
@@ -171,7 +171,7 @@ def do_get(name):
     print(f"Setting '{name}' does not exist")
 
 
-def do_set(name, value):
+def do_set(name, value) -> None:
     clear_status()
 
     global action
@@ -200,7 +200,7 @@ def do_set(name, value):
         raise FileReplace
 
 
-def do_add(name, value):
+def do_add(name, value) -> None:
     clear_status()
 
     new_setting = f"{name}={value}"
@@ -221,7 +221,7 @@ def do_add(name, value):
     print("'name' can be characters a-z, A-Z, 0-9, and _")
 
 
-def do_delete(name):
+def do_delete(name) -> None:
     clear_status()
 
     global action
@@ -293,7 +293,7 @@ commands = {
 }
 
 
-def process_input(line: str = None):
+def process_input(line: str = None) -> None:
     """Passes the command's arguments to the function that executes the command.
 
     Args:
@@ -334,7 +334,7 @@ def process_input(line: str = None):
         print_usage(command)
 
 
-def get_command_info(command: str):
+def get_command_info(command: str) -> Command:
     """Retrieves the CommandInfo instance for the given command.
 
     Args:
@@ -352,7 +352,7 @@ def get_command_info(command: str):
         print(f"Command '{command}' does not exist")
 
 
-def get_setting(line: str, name: str = None):
+def get_setting(line: str, name: str = None) -> Setting | None:
     """Attempts to find a setting in the given line and create a Setting instance.
 
     Args:
@@ -373,7 +373,7 @@ def get_setting(line: str, name: str = None):
     return Setting(setting)
 
 
-def print_usage(command: str = None):
+def print_usage(command: str = None) -> None:
     """Prints the usage information of the script or the given command.
 
     Args:
