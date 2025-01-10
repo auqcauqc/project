@@ -2,7 +2,7 @@
 
 ## Target assessment level
 
-### 3
+&#9314;
 
 ## Specification
 
