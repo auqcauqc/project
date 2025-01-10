@@ -80,7 +80,6 @@ def do_help(command=None) -> None:
     if command:
         print_usage(command)
         return None
-
     for command in commands:
         print(f"{command}: {commands[command].desc}")
 
@@ -111,7 +110,6 @@ def do_fix() -> None:
         setting = get_setting(file_line)
         if not setting:
             good = False
-            set_status(1)
             continue
 
         name = setting.name
@@ -194,8 +192,7 @@ def do_set(line) -> None:
                 exist = True
                 file_set.write(f"{line}\n")
                 continue
-
-        file_set.write(file_line)
+            file_set.write(file_line)
 
         if not exist:
             set_status(1)
@@ -212,7 +209,7 @@ def do_add(line) -> None:
         set_status(1)
         print("'name' can be characters a-z, A-Z, 0-9, and _")
         return None
-    
+
     with open(file_path, "rb+") as file_add:
         if os.stat(file_path).st_size != 0:
             file_add.seek(-1, 2)
@@ -220,7 +217,6 @@ def do_add(line) -> None:
             if file_add.read(1) != b"\n":
                 file_add.seek(0, 2)
                 file_add.write(b"\n")
-
         file_add.seek(0, 2)
         file_add.write(line.encode())
 
@@ -241,7 +237,6 @@ def do_delete(name) -> None:
             if setting and setting.name == name:
                 exist = True
                 continue  # Delete the line
-
             file_delete.write(file_line)
 
         if not exist:
@@ -277,15 +272,15 @@ commands = {
     ),
     "set": CommandInfo(
         do_set,
-        args="setting",
+        args="line",
         desc="Sets the value of a setting",
-        args_desc="setting: The setting in the format 'name=new_value'",
+        args_desc="line: The setting in the format 'name=new_value'",
     ),
     "add": CommandInfo(
         do_add,
-        args="setting",
+        args="line",
         desc="Adds a setting",
-        args_desc="setting: The setting in the format 'name=value'",
+        args_desc="line: The setting in the format 'name=value'",
     ),
     "delete": CommandInfo(
         do_delete,
@@ -310,14 +305,12 @@ def process_input(line: str = None) -> None:
         line = input("> ")
     if line == "":
         return None
-
     # Only the first word is in command, the reset is in args
     try:
         command, args = line.split(maxsplit=1)
     except ValueError:  # No argument
         command = line
         args = None
-
     command_info = get_command_info(command)
     if not command_info:
         return None
@@ -326,7 +319,6 @@ def process_input(line: str = None) -> None:
     if not args:
         command_info.func()
         return None
-
     # Get the right number of arguments of the command
     command_args_count = len(command_info.args.split())
     try:
@@ -373,7 +365,6 @@ def get_setting(line: str, name: str = None) -> Setting | None:
         setting = re.search(f"^{name}=.+", line)
         if not setting:
             return None
-
     return Setting(setting)
 
 
@@ -401,7 +392,6 @@ def print_usage(command: str = None) -> None:
 
 create_file = False
 no_help = False
-
 while True:
     try:
         if create_file:
@@ -427,7 +417,6 @@ while True:
                 # Execute command and exit
                 process_input(" ".join(sys.argv[2:]))
                 do_exit()
-
             if not no_help:
                 print("\nType 'help' for a list of commands and their descriptions")
                 print("Type 'help' followed by the name of a command to get its usage")
@@ -436,8 +425,8 @@ while True:
     except FileReplace as e:
         os.replace(temp_file_path, file_path)
         if e.deleted_settings:
-            for setting in e.deleted_settings:
-                print(f"Deleted duplicated setting {setting}")
+            for deleted_setting in e.deleted_settings:
+                print(f"Deleted duplicated setting {deleted_setting}")
         no_help = True
         continue  # Restart
     except FileNotFoundError:
