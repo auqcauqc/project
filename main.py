@@ -334,7 +334,7 @@ def process_input(line: str = None) -> None:
         print_usage(command)
 
 
-def get_command_info(command: str) -> Command:
+def get_command_info(command: str) -> CommandInfo:
     """Retrieves the CommandInfo instance for the given command.
 
     Args:
