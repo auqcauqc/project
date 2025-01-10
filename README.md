@@ -2,7 +2,7 @@
 
 ## Target assessment level
 
-**3**
+<p style="font-size: 1.5em;">3</p>
 
 ## Specification
 
