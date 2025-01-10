@@ -200,11 +200,10 @@ def do_set(name, value) -> None:
         raise FileReplace
 
 
-def do_add(name, value) -> None:
+def do_add(setting) -> None:
     clear_status()
 
-    new_setting = f"{name}={value}"
-    if get_setting(new_setting):
+    if get_setting(setting):
         with open(file_path, "rb+") as file_add:
             if os.stat(file_path).st_size != 0:
                 file_add.seek(-1, 2)
@@ -214,7 +213,7 @@ def do_add(name, value) -> None:
                     file_add.write(b"\n")
 
             file_add.seek(0, 2)
-            file_add.write(new_setting.encode())
+            file_add.write(setting.encode())
             return None
 
     set_status(1)
@@ -279,9 +278,9 @@ commands = {
     ),
     "add": CommandInfo(
         do_add,
-        args="name value",
+        args="setting",
         desc="Adds a setting",
-        args_desc="name: The name of the setting\nvalue: The value of the setting",
+        args_desc="setting: The setting in format 'name=value'",
     ),
     "delete": CommandInfo(
         do_delete,
