@@ -6,6 +6,10 @@
 
 ## Specification
 
+### Requirements
+
+Python 3.10 or above.
+
 ### Functions
 
 1. Given a text settings file, get/set the value of settings, add/delete settings
