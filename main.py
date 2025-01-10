@@ -51,7 +51,7 @@ class Setting:
         from a re.Match instance.
 
         Args:
-            setting: A re.Match instance containing a setting string.
+            setting: A re.Match instance containing a setting.
         """
         setting = setting.group()
         self.name = re.search(r"^\w+", setting).group()
@@ -88,8 +88,8 @@ def do_help(command=None) -> None:
 def do_list() -> None:
     clear_status()
 
-    for line_number, line in enumerate(file, start=1):
-        setting = get_setting(line)
+    for line_number, file_line in enumerate(file, start=1):
+        setting = get_setting(file_line)
         if not setting:
             set_status(1)
             print(f"Invalid setting at line {line_number}")
@@ -107,8 +107,8 @@ def do_fix() -> None:
     appeared_names = []
     duplicated_names = []
 
-    for line_number, line in enumerate(file, start=1):
-        setting = get_setting(line)
+    for line_number, file_line in enumerate(file, start=1):
+        setting = get_setting(file_line)
         if not setting:
             good = False
             set_status(1)
@@ -135,22 +135,22 @@ def do_fix() -> None:
         action = f"writing to temporary settings file '{temp_file_path}'"
         kept_names = []
         file.seek(0)
-        for line in file:
-            setting = get_setting(line)
+        for file_line in file:
+            setting = get_setting(file_line)
             if setting and setting.name:
                 if setting.name in duplicated_names and setting.name not in kept_names:
-                    file_fix.write(line)
+                    file_fix.write(file_line)
                     # Only keep the first setting with the name
                     kept_names.append(setting.name)
                     continue
                 if setting.name in kept_names:
                     continue  # Delete the line
 
-            file_fix.write(line)
+            file_fix.write(file_line)
 
         file_fix.seek(0)
-        for line_number, line in enumerate(file_fix, start=1):
-            if not get_setting(line):
+        for line_number, file_line in enumerate(file_fix, start=1):
+            if not get_setting(file_line):
                 print(f"Invalid setting at line {line_number}")
 
     action = f"writing to settings file '{file_path}'"
@@ -160,8 +160,8 @@ def do_fix() -> None:
 def do_get(name) -> None:
     clear_status()
 
-    for line in file:
-        setting = get_setting(line, name=name)
+    for file_line in file:
+        setting = get_setting(file_line, name=name)
         if setting:
             value = setting.value
             print(value)
@@ -171,7 +171,7 @@ def do_get(name) -> None:
     print(f"Setting '{name}' does not exist")
 
 
-def do_set(name, value) -> None:
+def do_set(line) -> None:
     clear_status()
 
     global action
@@ -179,18 +179,23 @@ def do_set(name, value) -> None:
     temp_file_path = f"{file_path}.tmp"
     action = f"creating temporary settings file '{temp_file_path}'"
 
+    if not get_setting(line):
+        set_status(1)
+        print(f"Invalid setting '{line}'")
+        return None
+
+    name = get_setting(line).name
     with open(temp_file_path, "w") as file_set:
         action = f"writing to temporary settings file '{temp_file_path}'"
         exist = False
-        for line in file:
-            setting = get_setting(line, name=name)
+        for file_line in file:
+            setting = get_setting(file_line, name=name)
             if setting and setting.name == name:
                 exist = True
-                new_setting = f"{name}={value}"
-                file_set.write(new_setting + "\n")
+                file_set.write(f"{line}\n")
                 continue
 
-            file_set.write(line)
+        file_set.write(file_line)
 
         if not exist:
             set_status(1)
@@ -200,24 +205,24 @@ def do_set(name, value) -> None:
         raise FileReplace
 
 
-def do_add(setting) -> None:
+def do_add(line) -> None:
     clear_status()
 
-    if get_setting(setting):
-        with open(file_path, "rb+") as file_add:
-            if os.stat(file_path).st_size != 0:
-                file_add.seek(-1, 2)
-                # If the file doesn't end with newline, append one
-                if file_add.read(1) != b"\n":
-                    file_add.seek(0, 2)
-                    file_add.write(b"\n")
+    if not get_setting(line):
+        set_status(1)
+        print("'name' can be characters a-z, A-Z, 0-9, and _")
+        return None
+    
+    with open(file_path, "rb+") as file_add:
+        if os.stat(file_path).st_size != 0:
+            file_add.seek(-1, 2)
+            # If the file doesn't end with newline, append one
+            if file_add.read(1) != b"\n":
+                file_add.seek(0, 2)
+                file_add.write(b"\n")
 
-            file_add.seek(0, 2)
-            file_add.write(setting.encode())
-            return None
-
-    set_status(1)
-    print("'name' can be characters a-z, A-Z, 0-9, and _")
+        file_add.seek(0, 2)
+        file_add.write(line.encode())
 
 
 def do_delete(name) -> None:
@@ -231,13 +236,13 @@ def do_delete(name) -> None:
     with open(temp_file_path, "w") as file_delete:
         action = f"writing to temporary settings file '{temp_file_path}'"
         exist = False
-        for line in file:
-            setting = get_setting(line, name=name)
+        for file_line in file:
+            setting = get_setting(file_line, name=name)
             if setting and setting.name == name:
                 exist = True
                 continue  # Delete the line
 
-            file_delete.write(line)
+            file_delete.write(file_line)
 
         if not exist:
             set_status(1)
@@ -272,15 +277,15 @@ commands = {
     ),
     "set": CommandInfo(
         do_set,
-        args="name value",
+        args="setting",
         desc="Sets the value of a setting",
-        args_desc="name: The name of the setting\nvalue: The value of the setting",
+        args_desc="setting: The setting in the format 'name=new_value'",
     ),
     "add": CommandInfo(
         do_add,
         args="setting",
         desc="Adds a setting",
-        args_desc="setting: The setting in format 'name=value'",
+        args_desc="setting: The setting in the format 'name=value'",
     ),
     "delete": CommandInfo(
         do_delete,
