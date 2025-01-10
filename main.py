@@ -7,7 +7,7 @@ import re
 class FileReplace(Exception):
     """Used to execute os.replace() outside 'with' block."""
 
-    def __init__(self, deleted_settings: List[str] = None):
+    def __init__(self, deleted_settings: list[str] = None):
         """
         Initializes a FileReplace instance.
 
