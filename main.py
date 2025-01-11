@@ -55,8 +55,9 @@ class Setting:
         Args:
             line: A string containing the setting.
         """
-        self.name = re.search(r"^\w+", line).group()
-        self.value = re.search("=(.+)", line).group(1)
+        # re.search() searches for a regular expression pattern in a string.
+        self.name = re.search(r"^\w+", line).group()  # The entire match
+        self.value = re.search("=(.+)", line).group(1)  # The first capturing group
 
 
 status: int = 0
