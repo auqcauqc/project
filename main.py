@@ -18,8 +18,7 @@ class FileReplace(Exception):
               Used for printing. Defaults to None.
         """
         self.deleted_settings = deleted_settings
-        # Initializes the parent class.
-        super().__init__(self)
+        super().__init__(self)  # Initializes the parent class
 
 
 class CommandInfo:
@@ -144,10 +143,9 @@ def do_fix() -> None:
             setting = get_setting(file_line)
             if setting and setting.name:
                 if setting.name in duplicated_names and setting.name not in kept_names:
-                    # Only keep the first setting with the name
-                    kept_names.append(setting.name)
+                    kept_names.append(setting.name)  # Only keep the first setting with the name
                 if setting.name in kept_names:
-                    continue  # Not write the line, deleting the line.
+                    continue  # Delete the line
 
             file_fix.write(file_line)
 
@@ -322,13 +320,11 @@ def process_input(line: str = None) -> None:
     if not command_info:
         return None
 
-    # Go to the start of the file before every command.
-    file.seek(0)
+    file.seek(0)  # Go to the start of the file before every command.
     if not args:
         command_info.func()
         return None
-    # Get the right number of arguments of the command
-    command_args_count = len(command_info.args.split())
+    command_args_count = len(command_info.args.split())  # Get the right number of arguments of the command
     try:
         # Every word is passed as an argument, the last argument stores the remaining words.
         # str.split() splits the string, the asterisk assigns the splitted strings to each argument.
@@ -368,7 +364,7 @@ def get_setting(line: str, name: str = None) -> Setting | None:
         Setting or None: A Setting instance if the setting is found; otherwise, None.
     """
     setting = re.search(r"^\w+=.+", line)
-    if not setting:
+    if not setting:  # Not a valid setting
         return None
     if name:
         setting = re.search(f"^{name}=.+", line)
@@ -408,8 +404,8 @@ while True:
         else:
             mode = "r+"
 
-        # sys.argv[1:] contains the arguments to this script
-        # At least two arguments, in which the second is the file to be opened
+        # sys.argv[1:] contains the arguments to this script.
+        # At least two arguments, in which the second is the file to be opened.
         if len(sys.argv) < 2:
             set_status(1)
             print("Settings file required")
