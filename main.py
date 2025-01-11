@@ -4,6 +4,8 @@ import os
 import re
 
 
+# This class is based on the Exception class, the Exception class is the parent class.
+# The parent class is like a template, and it needs to be initialized.
 class FileReplace(Exception):
     """Used to execute os.replace() outside 'with' block."""
 
@@ -16,6 +18,7 @@ class FileReplace(Exception):
               Used for printing. Defaults to None.
         """
         self.deleted_settings = deleted_settings
+        # Initializes the parent class.
         super().__init__(self)
 
 
@@ -46,22 +49,25 @@ class Setting:
         value (str): The value of the setting.
     """
 
-    def __init__(self, setting: re.Match):
-        """Initializes a Setting instance by extracting the name and value
-        from a re.Match instance.
+    def __init__(self, line: str):
+        """Initializes a Setting instance by extracting the name and value of a setting.
 
         Args:
-            setting: A re.Match instance containing a setting.
+            line: A string containing the setting.
         """
-        setting = setting.group()
-        self.name = re.search(r"^\w+", setting).group()
-        self.value = re.search("=(.+)", setting).group(1)
+        self.name = re.search(r"^\w+", line).group()
+        self.value = re.search("=(.+)", line).group(1)
 
 
 status: int = 0
 
 
 def set_status(value: int) -> None:
+    # Variables defined in functions are local variables.
+    # They are not accessible outside the function.
+    # 'status', defined outside functions, is a global variable.
+    # It can be read within any function.
+    # To assign a value to a global variable, the 'global' keyword must be used.
     global status
     status = value
 
@@ -137,12 +143,10 @@ def do_fix() -> None:
             setting = get_setting(file_line)
             if setting and setting.name:
                 if setting.name in duplicated_names and setting.name not in kept_names:
-                    file_fix.write(file_line)
                     # Only keep the first setting with the name
                     kept_names.append(setting.name)
-                    continue
                 if setting.name in kept_names:
-                    continue  # Delete the line
+                    continue  # Not write the line, deleting the line.
 
             file_fix.write(file_line)
 
@@ -190,8 +194,6 @@ def do_set(line) -> None:
             setting = get_setting(file_line, name=name)
             if setting and setting.name == name:
                 exist = True
-                file_set.write(f"{line}\n")
-                continue
             file_set.write(file_line)
 
         if not exist:
@@ -210,15 +212,20 @@ def do_add(line) -> None:
         print("'name' can be characters a-z, A-Z, 0-9, and _")
         return None
 
+    # Use 'b' to open the file in binary mode.
+    # Text encoding is not applied automatically when reading or writing.
     with open(file_path, "rb+") as file_add:
+        # If the file is not empty (st_size is 0) and does not end with a newline, append one.
         if os.stat(file_path).st_size != 0:
+            # Go to the last byte.
+            # 2 means the end, -1 means minus one from the end - the last.
             file_add.seek(-1, 2)
-            # If the file doesn't end with newline, append one
-            if file_add.read(1) != b"\n":
+            if file_add.read(1) != b"\n":  # Use 'b' to treat the content in quotes as bytes without encoding.
                 file_add.seek(0, 2)
                 file_add.write(b"\n")
+        
         file_add.seek(0, 2)
-        file_add.write(line.encode())
+        file_add.write(line.encode())  # Use str.encode() to encode text to bytes using an encoding, default is utf-8.
 
 
 def do_delete(name) -> None:
@@ -236,7 +243,7 @@ def do_delete(name) -> None:
             setting = get_setting(file_line, name=name)
             if setting and setting.name == name:
                 exist = True
-                continue  # Delete the line
+                continue
             file_delete.write(file_line)
 
         if not exist:
@@ -305,9 +312,8 @@ def process_input(line: str = None) -> None:
         line = input("> ")
     if line == "":
         return None
-    # Only the first word is in command, the reset is in args
     try:
-        command, args = line.split(maxsplit=1)
+        command, args = line.split(maxsplit=1)  # The first word is in command, the reset is in args
     except ValueError:  # No argument
         command = line
         args = None
@@ -315,6 +321,7 @@ def process_input(line: str = None) -> None:
     if not command_info:
         return None
 
+    # Go to the start of the file before every command.
     file.seek(0)
     if not args:
         command_info.func()
@@ -322,7 +329,8 @@ def process_input(line: str = None) -> None:
     # Get the right number of arguments of the command
     command_args_count = len(command_info.args.split())
     try:
-        # Every word is passed as an argument, the last argument stores the remaining words
+        # Every word is passed as an argument, the last argument stores the remaining words.
+        # str.split() splits the string, the asterisk assigns the splitted strings to each argument.
         command_info.func(*args.split(maxsplit=(command_args_count - 1)))
         return None
     except TypeError:
@@ -330,7 +338,7 @@ def process_input(line: str = None) -> None:
         print_usage(command)
 
 
-def get_command_info(command: str) -> CommandInfo:
+def get_command_info(command: str) -> CommandInfo | None:
     """Retrieves the CommandInfo instance for the given command.
 
     Args:
@@ -399,6 +407,7 @@ while True:
         else:
             mode = "r+"
 
+        # sys.argv[1:] contains the arguments to this script
         # At least two arguments, in which the second is the file to be opened
         if len(sys.argv) < 2:
             set_status(1)
