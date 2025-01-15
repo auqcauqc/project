@@ -74,8 +74,8 @@ Usage: get name
   name: The name of the setting
 > get ScriptPath
 C:\Users\yue.ouyang\main.py
-> set ScriptPath abc
-> add NewSetting x y z
+> set ScriptPath=abc
+> add NewSetting=x y z
 > list
 ScriptPath: abc
 Invalid setting at line 2
