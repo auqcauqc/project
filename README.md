@@ -12,8 +12,8 @@
 
 ### Functions
 
-- Given a text settings file, get/set the value of settings, add/delete settings
-- Check the format of settings and delete duplicated settings
+- Given a text settings file, gets/sets the value of settings, adds/deletes settings
+- Checks the format of settings and deletes duplicated settings
 
 ### Usage
 
