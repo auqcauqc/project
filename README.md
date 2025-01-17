@@ -63,7 +63,7 @@ Type 'help' followed by the name of a command to get its usage
 > help
 help: Displays help
 list: Lists all settings
-fix: Finds incorrectly formatted settings and deletes duplicated settings
+fix: Finds invalid settings and deletes duplicated settings
 get: Gets the value of a setting
 set: Sets the value of a setting
 add: Adds a setting
