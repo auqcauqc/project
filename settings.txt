@@ -1,0 +1,3 @@
+ScriptPath=C:\Users\yue.ouyang\main.py
+Setting+Path=C:\Users\yue.ouyang\settings.txt
+ScriptPath=main.py
