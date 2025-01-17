@@ -234,7 +234,8 @@ def do_add(line: str) -> None:
 
     if not get_setting(line):
         set_status(1)
-        print("'name' can be characters a-z, A-Z, 0-9, and _")
+        print("'name' can be characters a-z, A-Z, 0-9, and _\n")
+        print_usage("add")
         return None
 
     with open(file_path, "rb+") as file_add:
