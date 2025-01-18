@@ -478,6 +478,7 @@ while True:
             while True:
                 process_input()
     except FileReplace as e:
+        # Replace 'file_path' with 'temp_file_path'
         os.replace(temp_file_path, file_path)
         if e.deleted_settings:
             for deleted_setting in e.deleted_settings:
