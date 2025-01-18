@@ -41,7 +41,7 @@ name=value
 
 `name` can contain characters a-z, A-Z, 0-9 and _
 
-`value` can contain any UTF-8 character
+`value` can contain any character, can be empty
 
 ### Test case
 
