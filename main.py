@@ -24,7 +24,7 @@ class FileReplace(Exception):
 class CommandInfo:
     """Contains information about a command."""
 
-    def __init__(self, func, args="", desc="", args_desc=""):
+    def __init__(self, func, args: str = "", desc: str = "", args_desc: str = ""):
         """Initializes a CommandInfo instance.
 
         Args:
