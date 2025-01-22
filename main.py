@@ -49,7 +49,7 @@ def set_action(temp_file: bool = False, access: str = "write") -> None:
         temp_file: A boolean that specifies whether the current settings file
           is a temporary file.
         access: A string containing the type of access to the current file.
-          Possible values for it are "write", "create", or "delete".
+          Options are "write", "create", or "delete".
     """
     global action
     if access == "write":
@@ -83,6 +83,7 @@ def do_help(command: str | None = None) -> None:
     if command:
         print_usage(command)
         return None
+    # dict.items() returns tuples of keys and values.
     for command, command_info in commands.items():
         print(f"{command}: {command_info["desc"]}")
     return None
@@ -138,6 +139,7 @@ def do_fix() -> None:
     set_status(1)
     set_action(temp_file=True, access="create")
 
+    # Creates a temporary file. "delete=False" means do not delete automatically.
     with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_fix:
         set_temp_file_path(file_fix.name)
         set_action(temp_file=True, access="write")
