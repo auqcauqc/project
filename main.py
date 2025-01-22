@@ -139,9 +139,9 @@ def do_fix() -> None:
     set_status(1)
     set_action(temp_file=True, access="create")
 
-    # Creates a temporary file. "delete=False" means do not delete automatically.
+    # Creates a temporary file. "delete=False" means do not delete the file automatically.
     with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_fix:
-        set_temp_file_path(file_fix.name)
+        set_temp_file_path(file_fix.name)  # Store the path to the temporary file in "temp_file_path"
         set_action(temp_file=True, access="write")
         kept_names = []
         file.seek(0)
