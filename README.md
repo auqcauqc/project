@@ -97,7 +97,7 @@ A settings file must be provided as the first argument to the script. If it isn'
 
 Commands and their arguments are either read interactively in a loop or provided as arguments to the script. The command and arguments are first split apart with `command, args = line.split(maxsplit=1)`, so that everything after the command is an argument. If there is `ValueError`, it means there isn't an argument. Whether the command exists is also checked. If there isn't an argument, the command's corresponding function is called directly. If there is, try to pass the arguments to the command's corresponding function with `command_info.func(*args.split(maxsplit=(command_args_count - 1)))`, so that every word is passed as an argument, and the last argument stores all the remaining words. If there is `ValueError`, then there is an incorrect number of arguments.
 
-When reading or modifying settings, lines are read from the settings file with a loop. Try to match each line with regular expression `^\w+=.+` to make sure the the line is a correctly formatted setting.
+When reading or modifying settings, lines are read from the settings file with a loop. Try to match each line with regular expression `^\w+=.*` to make sure the the line is a correctly formatted setting.
 
 ### Resource management (level 3)
 
