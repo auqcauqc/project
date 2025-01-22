@@ -1,5 +1,7 @@
 import sys
 import os
+import tempfile
+from typing import Any
 
 import re
 
@@ -21,49 +23,6 @@ class FileReplace(Exception):
         super().__init__(self)  # Initializes the parent class
 
 
-class CommandInfo:
-    """Contains information about a command."""
-
-    def __init__(self, func, args: str = "", desc: str = "", args_desc: str = ""):
-        """Initializes a CommandInfo instance.
-
-        Args:
-            func: The function that executes the command.
-            args: A string containing the arguments used by the command.
-              The arguments of func correspond to the arguments in this string.
-            desc: A string containing the description of the command.
-            args_desc: A string containing the description of the arguments of the command.
-        """
-        self.func = func
-        self.args = args
-        self.desc = desc
-        self.args_desc = args_desc
-
-
-class Setting:
-    """Represents a setting with a name and a value.
-
-    Attributes:
-        name (str): The name of the setting.
-        value (str): The value of the setting.
-    """
-
-    def __init__(self, line: str):
-        """Initializes a Setting instance by extracting the name and value of a setting.
-
-        Args:
-            line: A string containing the setting.
-        """
-        # re.search() searches for a regular expression pattern in a string.
-        # '^' means to search for the pattern at the start of the line. re.match() does this automatically.
-        # '\w' means characters a-z, A-Z, and _. '.' means any character except newline.
-        # The brackets create a capturing group, which allows you to capture a part of the match
-        # '+' means one or more appearances of the preceding character, '*' means zero or more.
-
-        self.name = re.search(r"^\w+", line).group()  # The entire match
-        self.value = re.search("=(.*)", line).group(1)  # The first capturing group
-
-
 status: int = 0
 
 
@@ -83,8 +42,40 @@ def clear_status() -> None:
     status = 0
 
 
+def set_action(temp_file: bool = False, access: str = "write") -> None:
+    """Sets the description of what this script is doing.
+
+    Args:
+        temp_file: A boolean that specifies whether the current settings file
+          is a temporary file.
+        access: A string containing the type of access to the current file.
+          Possible values for it are "write", "create", or "delete".
+    """
+    global action
+    if access == "write":
+        action = "writing to "
+    elif access == "create":
+        action = "creating "
+    elif access == "delete":
+        action = "deleting "
+    if temp_file:
+        action += "temporary settings file"
+    else:
+        action += f"settings file {file_path}"
+
+
+def set_temp_file_path(path: str):
+    """Sets the path to the temporary settings file.
+
+    Args:
+        path: A string containing the path to the temporary settings file.
+    """
+    global temp_file_path
+    temp_file_path = path
+
+
 def do_help(command: str | None = None) -> None:
-    """List all commands or show usage of a command.
+    """Lists all commands or show usage of a command.
 
     Args:
         command (str): If not None is the name of the command to show usage of.
@@ -92,8 +83,9 @@ def do_help(command: str | None = None) -> None:
     if command:
         print_usage(command)
         return None
-    for command in commands:
-        print(f"{command}: {commands[command].desc}")
+    for command, command_info in commands.items():
+        print(f"{command}: {command_info["desc"]}")
+    return None
 
 
 def do_list() -> None:
@@ -106,8 +98,8 @@ def do_list() -> None:
             print(f"Invalid setting at line {line_number}")
             continue
 
-        name = setting.name
-        value = setting.value
+        name = setting["name"]
+        value = setting["value"]
         print(f"{name}: {value}")
 
 
@@ -132,7 +124,7 @@ def do_fix() -> None:
             good = False
             continue
 
-        name = setting.name
+        name = setting["name"]
         if name in appeared_names and name not in duplicated_names:
             good = False
             duplicated_names.append(name)
@@ -144,23 +136,21 @@ def do_fix() -> None:
         return None
 
     set_status(1)
-    global action
-    global temp_file_path
-    temp_file_path = f"{file_path}.tmp"
-    action = f"creating temporary settings file '{temp_file_path}'"
+    set_action(temp_file=True, access="create")
 
-    with open(temp_file_path, "w+") as file_fix:
-        action = f"writing to temporary settings file '{temp_file_path}'"
+    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_fix:
+        set_temp_file_path(file_fix.name)
+        set_action(temp_file=True, access="write")
         kept_names = []
         file.seek(0)
         for file_line in file:
             setting = get_setting(file_line)
             if setting:
-                if setting.name in duplicated_names and setting.name not in kept_names:
+                if setting["name"] in duplicated_names and setting["name"] not in kept_names:
                     kept_names.append(
-                        setting.name
+                        setting["name"]
                     )  # Only keep the first setting with the name
-                elif setting.name in kept_names:
+                elif setting["name"] in kept_names:
                     continue  # Delete the line
 
             file_fix.write(file_line)
@@ -170,7 +160,7 @@ def do_fix() -> None:
             if not get_setting(file_line):
                 print(f"Invalid setting at line {line_number}")
 
-    action = f"writing to settings file '{file_path}'"
+    set_action(temp_file=False, access="delete")
     raise FileReplace(duplicated_names)
 
 
@@ -180,12 +170,13 @@ def do_get(name: str) -> None:
     for file_line in file:
         setting = get_setting(file_line, name=name)
         if setting:
-            value = setting.value
+            value = setting["value"]
             print(value)
             return None
 
     set_status(1)
     print(f"Setting '{name}' does not exist")
+    return None
 
 
 def do_set(line: str) -> None:
@@ -199,23 +190,21 @@ def do_set(line: str) -> None:
     """
     clear_status()
 
-    global action
-    global temp_file_path
-    temp_file_path = f"{file_path}.tmp"
-    action = f"creating temporary settings file '{temp_file_path}'"
+    set_action(temp_file=True, access="create")
 
     if not get_setting(line):
         set_status(1)
         print(f"Invalid setting '{line}'")
         return None
 
-    name = get_setting(line).name
-    with open(temp_file_path, "w") as file_set:
-        action = f"writing to temporary settings file '{temp_file_path}'"
+    name = get_setting(line)["name"]
+    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_set:
+        set_temp_file_path(file_set.name)
+        set_action(temp_file=True, access="write")
         exist = False
         for file_line in file:
             setting = get_setting(file_line, name=name)
-            if setting and setting.name == name:
+            if setting and setting["name"] == name:
                 exist = True
                 file_set.write(f"{line}\n")
                 continue
@@ -225,8 +214,8 @@ def do_set(line: str) -> None:
             set_status(1)
             print(f"Setting '{name}' does not exist")
 
-        action = f"writing to settings file '{file_path}'"
-        raise FileReplace
+    set_action(temp_file=False, access="delete")
+    raise FileReplace
 
 
 def do_add(line: str) -> None:
@@ -251,6 +240,8 @@ def do_add(line: str) -> None:
         file_add.seek(0, 2)  # Go to the end
         file_add.write(line.encode())
 
+    return None
+
 
 def do_delete(name: str) -> None:
     """Deletes a setting.
@@ -263,17 +254,15 @@ def do_delete(name: str) -> None:
     """
     clear_status()
 
-    global action
-    global temp_file_path
-    temp_file_path = f"{file_path}.tmp"
-    action = f"creating temporary settings file '{temp_file_path}'"
+    set_action(temp_file=True, access="create")
 
-    with open(temp_file_path, "w") as file_delete:
-        action = f"writing to temporary settings file '{temp_file_path}'"
+    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_delete:
+        set_temp_file_path(file_delete.name)
+        set_action(temp_file=True, access="write")
         exist = False
         for file_line in file:
             setting = get_setting(file_line, name=name)
-            if setting and setting.name == name:
+            if setting and setting["name"] == name:
                 exist = True
                 continue
             file_delete.write(file_line)
@@ -283,8 +272,8 @@ def do_delete(name: str) -> None:
             print(f"Setting '{name}' does not exist")
             return None
 
-        action = f"writing to settings file '{file_path}'"
-        raise FileReplace
+    set_action(temp_file=False, access="delete")
+    raise FileReplace
 
 
 def do_exit():
@@ -292,42 +281,42 @@ def do_exit():
 
 
 commands = {
-    "help": CommandInfo(
-        do_help,
-        args="[command]",
-        desc="Displays help",
-        args_desc="command: The command to display help for",
-    ),
-    "list": CommandInfo(do_list, desc="Lists all settings"),
-    "fix": CommandInfo(
-        do_fix,
-        desc="Finds invalid settings and deletes duplicated settings",
-    ),
-    "get": CommandInfo(
-        do_get,
-        args="name",
-        desc="Gets the value of a setting",
-        args_desc="name: The name of the setting",
-    ),
-    "set": CommandInfo(
-        do_set,
-        args="line",
-        desc="Sets the value of a setting",
-        args_desc="line: The setting in the format 'name=new_value'",
-    ),
-    "add": CommandInfo(
-        do_add,
-        args="line",
-        desc="Adds a setting",
-        args_desc="line: The setting in the format 'name=value'",
-    ),
-    "delete": CommandInfo(
-        do_delete,
-        args="name",
-        desc="Deletes a setting",
-        args_desc="name: The name of the setting",
-    ),
-    "exit": CommandInfo(do_exit, desc="Exists this script"),
+    "help": {
+        "func": do_help,
+        "args": "[command]",
+        "desc": "Displays help",
+        "args_desc": "command: The command to display help for",
+    },
+    "list": {"func": do_list, "desc": "Lists all settings"},
+    "fix": {
+        "func": do_fix,
+        "desc": "Finds invalid settings and deletes duplicated settings",
+    },
+    "get": {
+        "func": do_get,
+        "args": "name",
+        "desc": "Gets the value of a setting",
+        "args_desc": "name: The name of the setting",
+    },
+    "set": {
+        "func": do_set,
+        "args": "line",
+        "desc": "Sets the value of a setting",
+        "args_desc": "line: The setting in the format 'name=new_value'",
+    },
+    "add": {
+        "func": do_add,
+        "args": "line",
+        "desc": "Adds a setting",
+        "args_desc": "line: The setting in the format 'name=value'",
+    },
+    "delete": {
+        "func": do_delete,
+        "args": "name",
+        "desc": "Deletes a setting",
+        "args_desc": "name: The name of the setting",
+    },
+    "exit": {"func": do_exit, "desc": "Exists this script"},
 }
 
 
@@ -360,51 +349,57 @@ def process_input(line: str | None = None) -> None:
     file.seek(0)  # Go to the start of the file before every command.
 
     if not args:
-        command_info.func()
+        command_info["func"]()
         return None
     command_args_count = len(
-        command_info.args.split()
+        # Returns a default value if the key doesn't exist
+        command_info.get("args", "").split()
     )  # Get the right number of arguments of the command
     if command_args_count == 1:
-        command_info.func(args)
+        command_info["func"](args)
         return None
     try:
         # Every word is passed as an argument, the last argument stores the remaining words.
         # str.split() splits the string, the asterisk assigns the split strings to each argument.
-        command_info.func(*args.split(maxsplit=(command_args_count - 1)))
+        command_info["func"](*args.split(maxsplit=command_args_count - 1))
         return None
     except TypeError:
         print("Incorrect number of arguments")
         print_usage(command)
+    return None
 
 
-def get_command_info(command: str) -> CommandInfo | None:
-    """Retrieves the CommandInfo object for the given command.
+def get_command_info(command: str) -> dict[str, Any] | None:
+    """Retrieves the information on the given command.
 
     Args:
-        command: The name of the command for which to retrieve the CommandInfo instance.
+        command: The name of the command for which to retrieve the information on.
 
     Returns:
-        CommandInfo or None: The CommandInfo instance if the command exists; otherwise, None.
+        dict[str, Any] or None: The dictionary containing the information
+          if the command exists; otherwise, None.
     """
     clear_status()
 
     try:
         return commands[command]
-    except ValueError:
+    except KeyError:
         set_status(1)
         print(f"Command '{command}' does not exist")
+        return None
 
 
-def get_setting(line: str, name: str | None = None) -> Setting | None:
-    """Attempts to find a setting in the given line and create a Setting instance.
+def get_setting(line: str, name: str | None = None) -> dict[str, str] | None:
+    """Attempts to find a setting in the given line and create a dictionary
+      containing the name and value of the setting
 
     Args:
         line: A string containing the setting.
         name: The name of the setting to find in the line. Defaults to None.
 
     Returns:
-        Setting or None: A Setting instance if the setting is found; otherwise, None.
+        dict[str, str] or None: A dictionary containing the name and value
+          of the setting if the setting is found; otherwise, None.
     """
     match = re.search(r"^\w+=.*", line)
     if not match:  # Not a valid setting
@@ -414,7 +409,15 @@ def get_setting(line: str, name: str | None = None) -> Setting | None:
         if not match:
             return None
 
-    return Setting(match.group())
+    # re.search() searches for a regular expression pattern in a string.
+    # '^' means to search for the pattern at the start of the line.
+    # '\w' means characters a-z, A-Z, and _. '.' means any character except newline.
+    # The brackets create a capturing group, which allows you to capture a part of the match
+    # '+' means one or more appearances of the preceding character, '*' means zero or more.
+
+    name = re.search(r"^\w+", line).group()  # The entire match
+    value = re.search("=(.*)", line).group(1)  # The first capturing group
+    return {"name": name, "value": value}
 
 
 def print_usage(command: str | None = None) -> None:
@@ -426,22 +429,22 @@ def print_usage(command: str | None = None) -> None:
     """
     if not command:
         command = os.path.basename(__file__)
-        print(f"Usage:")
+        print("Usage:")
         print(f"  {command} --help")
         print(f"  {command} file [command] [args]")
         return None
 
     command_info = get_command_info(command)
-    args = command_info.args
+    args = command_info.get("args", "")
     print(f"Usage: {command} {args}")
     if args:
-        for line in command_info.args_desc.splitlines():
+        for line in command_info["args_desc"].splitlines():
             print(f"  {line}")
+    return None
 
 
 create_file = False
 no_help = False
-file = None
 action = ""
 file_path = ""
 temp_file_path = ""
@@ -450,8 +453,10 @@ while True:
     try:
         if create_file:
             mode = "w+"
+            set_action(temp_file=False, access="create")
         else:
             mode = "r+"
+            set_action(temp_file=False, access="write")
 
         # sys.argv[1:] contains the arguments to this script.
         # At least two arguments, in which the second is the file to be opened.
@@ -465,9 +470,7 @@ while True:
             do_exit()
 
         file_path = sys.argv[1]
-        action = f"opening settings file '{file_path}'"
-        with open(file_path, mode) as file:
-            action = f"writing to settings file '{file_path}'"
+        with open(file_path, mode, encoding="utf-8") as file:
             if len(sys.argv) > 2:
                 # Execute command and exit
                 process_input(" ".join(sys.argv[2:]))
@@ -495,13 +498,14 @@ while True:
     except PermissionError:
         print(f"Permission error when {action}")
     except UnicodeDecodeError:
-        print("Settings file must be a text file")
+        print(("The settings file must be a text file"
+               " in UTF-8 encoding."))
     except OSError:
         print(f"Error when {action}")
     except KeyboardInterrupt:
         print("exit")
         try:
-            with open(temp_file_path, "r") as check_exist:
+            with open(temp_file_path, "w", encoding="utf-8") as check_exist:
                 pass
             os.remove(temp_file_path)
         except FileNotFoundError:
