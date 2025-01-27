@@ -1,6 +1,6 @@
 import sys
 import os
-import tempfile
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 import re
@@ -140,8 +140,9 @@ def do_fix() -> None:
     set_action(temp_file=True, access="create")
 
     # Creates a temporary file. "delete=False" means do not delete the file automatically.
-    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_fix:
-        set_temp_file_path(file_fix.name)  # Store the path to the temporary file in "temp_file_path"
+    with NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_fix:
+        # Store the path to the temporary file in "temp_file_path"
+        set_temp_file_path(file_fix.name)
         set_action(temp_file=True, access="write")
         kept_names = []
         file.seek(0)
@@ -162,7 +163,6 @@ def do_fix() -> None:
             if not get_setting(file_line):
                 print(f"Invalid setting at line {line_number}")
 
-    set_action(temp_file=False, access="delete")
     raise FileReplace(duplicated_names)
 
 
@@ -200,7 +200,7 @@ def do_set(line: str) -> None:
         return None
 
     name = get_setting(line)["name"]
-    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_set:
+    with NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_set:
         set_temp_file_path(file_set.name)
         set_action(temp_file=True, access="write")
         exist = False
@@ -216,7 +216,6 @@ def do_set(line: str) -> None:
             set_status(1)
             print(f"Setting '{name}' does not exist")
 
-    set_action(temp_file=False, access="delete")
     raise FileReplace
 
 
@@ -258,7 +257,7 @@ def do_delete(name: str) -> None:
 
     set_action(temp_file=True, access="create")
 
-    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_delete:
+    with NamedTemporaryFile("w+", encoding="utf-8", delete=False) as file_delete:
         set_temp_file_path(file_delete.name)
         set_action(temp_file=True, access="write")
         exist = False
@@ -274,7 +273,6 @@ def do_delete(name: str) -> None:
             print(f"Setting '{name}' does not exist")
             return None
 
-    set_action(temp_file=False, access="delete")
     raise FileReplace
 
 
@@ -348,19 +346,17 @@ def process_input(line: str | None = None) -> None:
     if not command_info:
         return None
 
+    set_action(temp_file=False, access="write")
     file.seek(0)  # Go to the start of the file before every command.
 
-    if not args:
-        command_info["func"]()
-        return None
     command_args_count = len(
         # Returns a default value if the key doesn't exist
         command_info.get("args", "").split()
     )  # Get the right number of arguments of the command
-    if command_args_count == 1:
-        command_info["func"](args)
-        return None
     try:
+        if not args:
+            command_info["func"]()
+            return None
         # Every word is passed as an argument, the last argument stores the remaining words.
         # str.split() splits the string, the asterisk assigns the split strings to each argument.
         command_info["func"](*args.split(maxsplit=command_args_count - 1))
@@ -437,6 +433,8 @@ def print_usage(command: str | None = None) -> None:
         return None
 
     command_info = get_command_info(command)
+    if not command_info:
+        return None
     args = command_info.get("args", "")
     print(f"Usage: {command} {args}")
     if args:
@@ -464,7 +462,7 @@ while True:
         # At least two arguments, in which the second is the file to be opened.
         if len(sys.argv) < 2:
             set_status(1)
-            print("Settings file required")
+            print("Settings file required\n")
             print_usage()
             do_exit()
         if len(sys.argv) == 2 and sys.argv[1] == "--help":
@@ -473,6 +471,10 @@ while True:
 
         file_path = sys.argv[1]
         with open(file_path, mode, encoding="utf-8") as file:
+            set_action(temp_file=False, access="write")
+            # Check if the file is UTF-8 encoded.
+            for line_check in file:
+                continue
             if len(sys.argv) > 2:
                 # Execute command and exit
                 process_input(" ".join(sys.argv[2:]))
@@ -482,8 +484,10 @@ while True:
                 print("Type 'help' followed by the name of a command to get its usage")
             while True:
                 process_input()
+
     except FileReplace as e:
-        # Replace 'file_path' with 'temp_file_path'
+        set_action(temp_file=False, access="delete")
+        # Replace the current settings file with the temporary settings file.
         os.replace(temp_file_path, file_path)
         if e.deleted_settings:
             for deleted_setting in e.deleted_settings:
@@ -500,16 +504,17 @@ while True:
     except PermissionError:
         print(f"Permission error when {action}")
     except UnicodeDecodeError:
-        print(("The settings file must be a text file"
-               " in UTF-8 encoding."))
+        print("The settings file must be a text file in UTF-8 encoding.")
     except OSError:
         print(f"Error when {action}")
     except KeyboardInterrupt:
         print("exit")
         try:
+            set_action(temp_file=True, access="write")
             with open(temp_file_path, "w", encoding="utf-8") as check_exist:
-                pass
-            os.remove(temp_file_path)
+                pass  # Do nothing
+            set_action(temp_file=True, access="delete")
+            os.remove(temp_file_path)  # Remove the temporary file
         except FileNotFoundError:
             pass
         do_exit()
