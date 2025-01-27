@@ -93,7 +93,7 @@ NewSetting: x y z
 
 ### Checking input (level 2)
 
-A settings file must be provided as the first argument to the script. If it isn't, the script exits after printing usage of the script. If the file doesn't exist, it is created. Problems inside the settings file or with commands causes error messages to be printed and status set to 1. Exceptions that cannot be handled when creating/opening/writing to the file causes the script to exit with status 2 along with an error message.
+A settings file must be provided as the first argument to the script. If it isn't, the script exits after printing usage of the script. If the file doesn't exist, it is created. Problems with settings or commands causes error messages to be printed and status set to `1`. Exceptions that cannot be handled when creating/opening/writing to the file causes the script to exit with status `2` along with an error message.
 
 Commands and their arguments are either read interactively in a loop or provided as arguments to the script. The command and arguments are first split apart with `command, args = line.split(maxsplit=1)`, so that everything after the command is an argument. If there is `ValueError`, it means there isn't an argument. Whether the command exists is also checked. If there isn't an argument, the command's corresponding function is called directly. If there is, try to pass the arguments to the command's corresponding function with `command_info["func"](*args.split(maxsplit=command_args_count - 1))`, so that every word is passed as an argument, and the last argument stores all the remaining words. If there is `ValueError`, then there is an incorrect number of arguments.
 
