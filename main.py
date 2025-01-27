@@ -409,8 +409,8 @@ def get_setting(line: str, name: str | None = None) -> dict[str, str] | None:
 
     # re.search() searches for a regular expression pattern in a string.
     # '^' means to search for the pattern at the start of the line.
-    # '\w' means characters a-z, A-Z, and _. '.' means any character except newline.
-    # The brackets create a capturing group, which allows you to capture a part of the match
+    # '\w' represents characters a-z, A-Z, and _. '.' represents any character except newline.
+    # The brackets create a capturing group, which allows you to capture a part of the match.
     # '+' means one or more appearances of the preceding character, '*' means zero or more.
 
     name = re.search(r"^\w+", line).group()  # The entire match
