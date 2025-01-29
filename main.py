@@ -46,7 +46,7 @@ def set_action(temp_file: bool = False, access: str = "write") -> None:
     """Sets the description of what this script is doing.
 
     Args:
-        temp_file: A boolean that specifies whether the current settings file
+        temp_file: Indicates whether the current settings file
           is a temporary file.
         access: A string containing the type of access to the current file.
           Options are "write", "create", or "delete".
