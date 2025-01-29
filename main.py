@@ -31,7 +31,7 @@ def set_status(value: int) -> None:
     # They are not accessible outside the function.
     # 'status', defined outside functions, is a global variable.
     # It can be read within any function.
-    # To assign a value to a global variable, the 'global' keyword must be used.
+    # To modify a global variable, the 'global' keyword must be used.
 
     global status
     status = value
