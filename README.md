@@ -103,4 +103,4 @@ When reading or modifying settings, lines are read from the settings file with a
 
 Settings files and temporary settings files are opened with `with` statements, and will therefore be closed automatically.
 
-Files are not never entirely loaded into memory in case the file is large.
+Files are never entirely loaded into memory in case the file is large.
