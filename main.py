@@ -64,7 +64,7 @@ def set_action(temp_file: bool = False, access: str = "write") -> None:
         action += f"settings file {file_path}"
 
 
-def set_temp_file_path(path: str):
+def set_temp_file_path(path: str) -> None:
     """Sets the path to the temporary settings file.
 
     Args:
