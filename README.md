@@ -25,6 +25,8 @@ main.py --help
 
 Opens settings file `file`, use command `command` with arguments `args` to execute the command and exit, or enter commands interactively.
 
+A settings file must be provided as the first argument to the script. If it isn't, the script exits after printing usage of the script. If the file doesn't exist, it is created. If the settings file isn't encoded in UTF-8, or there are errors opening or creating settings files, the script exits with status `2` along with an error message. Problems with settings or commands causes error messages to be printed and the status set to `1`.
+
 ```
 main.py file [command] [args]
 ```
@@ -53,10 +55,8 @@ Setting+Path=C:\Users\yue.ouyang\settings.txt
 ScriptPath=main.py
 ```
 
-Using the script
-
 ```
-main.py settings.txt 
+python main.py settings.txt 
 
 Type 'help' for a list of commands and their descriptions
 Type 'help' followed by the name of a command to get its usage
@@ -93,11 +93,9 @@ NewSetting: x y z
 
 ### Checking input (level 2)
 
-A settings file must be provided as the first argument to the script. If it isn't, the script exits after printing usage of the script. If the file doesn't exist, it is created. Problems with settings or commands causes error messages to be printed and status set to `1`. Exceptions that cannot be handled when creating/opening/writing to the file causes the script to exit with status `2` along with an error message.
+Whether the command exists is checked. If the command is not found in the dictionary, it doesn't exist. The command and arguments are first split apart with `command, args = line.split(maxsplit=1)`. `maxsplit=1` make sures that everything after the command are arguments. If there is `ValueError`, there isn't an argument. If there isn't an argument, the command's corresponding function is called directly. If there is, try to pass the arguments to the command's corresponding function with `*args.split(maxsplit=command_args_count - 1)`, so that every word is passed as an argument, and the last argument stores all the remaining words. If there is `ValueError`, then there are too few arguments.
 
-Commands and their arguments are either read interactively in a loop or provided as arguments to the script. The command and arguments are first split apart with `command, args = line.split(maxsplit=1)`, so that everything after the command is an argument. If there is `ValueError`, it means there isn't an argument. Whether the command exists is also checked. If there isn't an argument, the command's corresponding function is called directly. If there is, try to pass the arguments to the command's corresponding function with `command_info["func"](*args.split(maxsplit=command_args_count - 1))`, so that every word is passed as an argument, and the last argument stores all the remaining words. If there is `ValueError`, then there is an incorrect number of arguments.
-
-When reading or modifying settings, lines are read from the settings file with a loop. Try to match each line with regular expression `^\w+=.*` to make sure the the line is a correctly formatted setting.
+When reading or modifying settings, try to match lines with the regular expression `^\w+=.*` to make sure the the line is a correctly formatted setting.
 
 ### Resource management (level 3)
 
